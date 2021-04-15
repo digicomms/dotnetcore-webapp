@@ -6,17 +6,27 @@ on:
   pull_request:
     branches: [ main ]
 
+env:
+  AZURE_WEBAPP_NAME: dotnetcore-webapp  # set this to your application's name
+  AZURE_WEBAPP_PACKAGE_PATH: '.'        # set this to the path to your web app project, defaults to the repository root
+  DOTNET_VERSION: '2.1.x'               # set this to the dot net version to use
+
+
 jobs:
   build:
 
     runs-on: ubuntu-latest
 
     steps:
+    # Checkout the repo
     - uses: actions/checkout@v2
+    
+    # Setup .NET Core SDK
     - name: Setup .NET
       uses: actions/setup-dotnet@v1
       with:
         dotnet-version: 2.1.x
+    # Run dotnet build and publish        
     - name: Restore dependencies
       run: dotnet restore
     - name: Build
@@ -24,9 +34,18 @@ jobs:
     - name: Test
       run: dotnet test --no-build --verbosity normal
     - name: Publish
-      run: dotnet publish
+      run: dotnet publish -o \${{env.DOTNET_ROOT}}/myapp
+      
     - name: Upload WebApp1 Build Artifact
       uses: actions/upload-artifact@v2
       with:
         name: WebApp1
         path: /home/runner/work/dotnetcore-webapp/dotnetcore-webapp/bin/Debug/netcoreapp2.1/publish/
+
+    # Deploy to Azure Web apps
+    - name: 'Run Azure webapp deploy action using publish profile credentials'
+      uses: azure/webapps-deploy@v2
+      with: 
+        app-name: ${{ env.AZURE_WEBAPP_NAME }} # Replace with your app name
+        publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }} # Define secret variable in repository settings as per action documentation
+        package: '${{ env.AZURE_WEBAPP_PACKAGE_PATH }}/myapp'
