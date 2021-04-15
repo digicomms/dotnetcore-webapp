@@ -25,3 +25,8 @@ jobs:
       run: dotnet test --no-build --verbosity normal
     - name: Publish
       run: dotnet publish
+    - name: Upload WebApp1 Build Artifact
+      uses: actions/upload-artifact@v2
+      with:
+        name: WebApp1
+        path: /home/runner/work/dotnetcore-webapp/dotnetcore-webapp/bin/Debug/netcoreapp2.1/publish/
